@@ -1,0 +1,6 @@
+services:
+  - type: static
+    name: secure-form
+    env: static
+    buildCommand: ""
+    staticPublishPath: public

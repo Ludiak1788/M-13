@@ -1,0 +1,291 @@
+
+<!DOCTYPE html>
+
+<html lang="pl">
+<head>
+<meta charset="utf-8"/>
+<title>Ankieta anonimowa / Анонимный опрос</title>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<style>
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin: 30px;
+      background-color: #f5f7fa;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    #intro, #geoStage {
+      display: none;
+    }
+    #intro.active, #geoStage.active {
+      display: block;
+    }
+    #message {
+      font-size: 1.2em;
+      margin-top: 30px;
+    }
+    iframe {
+      margin-top: 40px;
+      width: 100%;
+      height: 1200px;
+      border: none;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .btn {
+      margin: 20px 10px;
+      padding: 12px 24px;
+      font-size: 1em;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+    #continueButton {
+      background: linear-gradient(135deg, #2e7d32, #43a047);
+      color: white;
+      font-size: 1.1em;
+      padding: 14px 30px;
+      margin-top: 30px;
+      box-shadow: 0 4px 10px rgba(34, 139, 34, 0.3);
+      animation: fadeInUp 1.2s ease-out;
+    }
+    #startButton {
+      background-color: #4CAF50;
+      color: white;
+    }
+    #startButton:hover {
+      background-color: #45a049;
+      transform: scale(1.05);
+    }
+    #retryButton {
+      background-color: #2196F3;
+      color: white;
+    }
+    #retryButton:hover {
+      background-color: #1976D2;
+      transform: scale(1.05);
+    }
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    #poster {
+      max-width: 100%;
+      max-height: 800px;
+      margin-bottom: 30px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.15);
+    }
+  </style>
+</head>
+<body oncontextmenu="return false;">
+<div class="active" id="intro">
+<h1>Witamy! / Добро пожаловать!</h1>
+<p>
+      Przeczytaj instrukcję poniżej, zanim rozpoczniesz. <br/>
+      Пожалуйста, прочитайте инструкцию перед началом.
+    </p>
+<img alt="Instrukcja / Инструкция" id="poster" src="14.07.2025.png"/>
+<button class="btn" id="continueButton" onclick="goToInfoTabs()" style="
+      font-size: 1.1em;
+      padding: 14px 30px;
+      margin-top: 30px;
+      background: linear-gradient(135deg, #2e7d32, #43a047);
+      box-shadow: 0 4px 10px rgba(34, 139, 34, 0.3);
+      color: white;
+      animation: fadeInUp 1.2s ease-out;
+    ">➡️ Kontynuuj / Продолжить</button>
+</div>
+<div class="infoTabsSection" id="infoTabs" style="max-width: 1000px; margin: 40px auto; padding: 30px; background: white; border-radius: 16px; box-shadow: 0 6px 16px rgba(0,0,0,0.07); text-align: left; display: none;">
+<h2 style="text-align:center; font-size: 1.6em; margin-bottom: 10px;">🛈 Co musisz wiedzieć? / Что нужно знать?</h2>
+<p style="text-align:center; font-size: 0.95em; color: #666; margin-bottom: 20px;">📘 Wybierz język / Выберите язык</p>
+<div style="text-align: center; margin-bottom: 20px;">
+<button onclick="showTab('plTab')" style="padding: 10px 20px; margin-right: 10px; border-radius: 8px; border: none; background: #2e7d32; color: white; cursor: pointer;">🇵🇱 Polski</button>
+<button onclick="showTab('ruTab')" style="padding: 10px 20px; border-radius: 8px; border: none; background: #1565c0; color: white; cursor: pointer;">🇷🇺 Русский</button>
+</div>
+<div class="infoTab" id="plTab">
+<h2>📍 Dlaczego używamy klucza geolokalizacyjnego?</h2>
+<p>🧭 Aby zapewnić <strong>maksymalną uczciwość i wiarygodność wyników</strong>, dostęp do ankiety mają wyłącznie <strong>pracownicy magazynu AutoDoc M13</strong>, znajdujący się fizycznie na jego terenie.</p>
+<p>📌 Dzięki kluczowi geolokalizacyjnemu system <strong>automatycznie potwierdza obecność</strong> użytkownika we właściwej lokalizacji, co zapobiega wypełnianiu ankiety poza magazynem.</p>
+<p>✅ Gwarantuje to, że w ankiecie biorą udział tylko osoby przebywające na miejscu.</p>
+<p>🔒 Dane lokalizacyjne <strong>nie są zapisywane ani udostępniane</strong> – służą wyłącznie do jednorazowej weryfikacji.</p>
+<h2 style="margin-top:30px;">📩 Informacje dotyczące przesyłania ankiety</h2>
+<p>🔁 Formularz można przesłać tylko <strong>jeden raz</strong>.</p>
+<p>🔐 W celu weryfikacji system może poprosić o <strong>zalogowanie się na konto Google</strong>.</p>
+<p>📧 Adres e-mail jest wykorzystywany <strong>wyłącznie w celu sprawdzenia, czy ankieta została wypełniona tylko raz</strong>. <strong>Nie jest on zapisywany ani udostępniany</strong>.</p>
+<p>🕵️ Ankieta jest w pełni <strong>anonimowa</strong>, a <strong>żadne dane osobowe nie są przetwarzane</strong>.</p>
+<button class="btn" onclick="backToIntro()" style="margin-top: 20px; margin-right: 10px; background: #888; color: white;">⬅️ Wróć / Назад</button>
+<button class="btn" id="toGeoStageBtn" onclick="goToGeoStageFromTabs()" style="margin-top: 30px; background: #1565c0; color: white;">➡️ Rozpocznij / Начать</button>
+</div>
+<div class="infoTab" id="ruTab" style="display:none;">
+<h2>📍 Почему мы используем геолокационный ключ?</h2>
+<p>🧭 Чтобы обеспечить <strong>максимальную честность и достоверность результатов</strong>, пройти опрос могут только <strong>сотрудники склада AutoDoc M13</strong>, находящиеся на его территории.</p>
+<p>📌 Геолокационный ключ позволяет системе <strong>автоматически подтвердить</strong> нахождение пользователя в нужной зоне и исключить прохождение опроса вне склада.</p>
+<p>✅ Такой подход гарантирует, что участвуют только те, кто действительно находится на складе.</p>
+<p>🔒 Местоположение <strong>не сохраняется и не передаётся</strong> — используется только для одноразовой проверки.</p>
+<h2 style="margin-top:30px;">📩 Информация о прохождении анкеты</h2>
+<p>🔁 Форму можно отправить только <strong>один раз</strong>.</p>
+<p>🔐 Для проверки система может запросить <strong>вход в аккаунт Google</strong>.</p>
+<p>📧 Адрес электронной почты используется <strong>только для проверки, что опрос проходит один человек один раз</strong>. Он <strong>не сохраняется и не передаётся</strong>.</p>
+<p>🕵️ Опрос полностью <strong>анонимен</strong>, никакие <strong>персональные данные не обрабатываются</strong>.</p>
+<button class="btn" onclick="backToIntro()" style="margin-top: 20px; margin-right: 10px; background: #888; color: white;">⬅️ Wróć / Назад</button>
+<button class="btn" onclick="goToGeoStageFromTabs()" style="margin-top: 30px; background: #1565c0; color: white;">➡️ Начать / Rozpocznij</button>
+</div>
+</div>
+<script>
+  function backToIntro() {
+    document.getElementById('infoTabs').style.display = 'none';
+    document.getElementById('intro').classList.add('active');
+  }
+</script>
+<script>
+  function goToInfoTabs() {
+    document.getElementById('intro').classList.remove('active');
+    document.getElementById('infoTabs').style.display = 'block';
+  }
+</script>
+<script>
+  function showTab(tabId) {
+    document.getElementById('plTab').style.display = (tabId === 'plTab') ? 'block' : 'none';
+    document.getElementById('ruTab').style.display = (tabId === 'ruTab') ? 'block' : 'none';
+  }
+
+  function goToGeoStageFromTabs() {
+    document.getElementById('infoTabs').style.display = 'none';
+    document.getElementById('geoStage').classList.add('active');
+  }
+</script>
+<div id="geoStage">
+<h1>Sprawdzenie lokalizacji / Проверка местоположения</h1>
+<div id="message">Kliknij poniższy przycisk, aby rozpocząć. / Нажмите кнопку ниже для начала.</div>
+<button class="btn" id="startButton">📍 Sprawdź lokalizację / Проверить местоположение</button>
+<button class="btn" id="retryButton" style="display:none;">🔄 Odśwież / Обновить</button>
+<button class="btn" id="backToIntroButton" style="display:none; background-color: #2e7d32; color: white; margin-left: 10px;">🔙 Wróć / Вернуться в начало</button></div>
+<script>
+    const warehouseLat = 53.427023778266154;
+    const warehouseLon = 14.735672852779608;
+    const allowedRadius = 100;
+
+    const intro = document.getElementById('intro');
+    const geoStage = document.getElementById('geoStage');
+    const startButton = document.getElementById('startButton');
+    const retryButton = document.getElementById('retryButton');
+    const message = document.getElementById('message');
+
+    function goToGeoStage() {
+      intro.classList.remove('active');
+      geoStage.classList.add('active');
+    }
+
+    startButton.addEventListener('click', () => {
+      runGeolocationCheck();
+    });
+
+    retryButton.addEventListener('click', () => {
+        backToIntroButton.style.display = 'none';
+      resetToInitialState();
+    });
+
+    function runGeolocationCheck() {
+      message.textContent = '⏳ Sprawdzanie współrzędnych... / Проверка координат...';
+      startButton.style.display = 'none';
+      retryButton.style.display = 'none';
+
+      navigator.geolocation.getCurrentPosition(success, error, {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      });
+    }
+
+    function success(position) {
+      const userLat = position.coords.latitude;
+      const userLon = position.coords.longitude;
+      const distance = getDistanceFromLatLonInMeters(userLat, userLon, warehouseLat, warehouseLon);
+
+      if (distance <= allowedRadius) {
+        
+        const hiddenURL = atob("aHR0cHM6Ly9kb2NzLmdvb2dsZS5jb20vZm9ybXMvZC9lLzFGQUlwUUxTZldUdDlyaEJ0b3NrNG9BdWx5VXhUa1RIazA2Tkp6R1FfcVoweVprb1ZGYjZmOUdnL3ZpZXdmb3JtP3VzcD1kaWFsb2c=");
+        const iframe = document.createElement('iframe');
+        iframe.src = hiddenURL;
+        iframe.style.width = "100%";
+        iframe.style.height = "1200px";
+        iframe.style.border = "none";
+        iframe.style.boxShadow = "0 0 10px rgba(0,0,0,0.1)";
+        iframe.setAttribute("sandbox", "allow-forms allow-scripts allow-same-origin");
+        document.getElementById("message").innerHTML = `
+          ✅ Lokalizacja potwierdzona. Wypełnij formularz poniżej:<br>
+          ✅ Местоположение подтверждено. Заполните форму ниже:
+        `;
+        document.getElementById("message").appendChild(iframe);
+
+        retryButton.style.display = 'inline-block';
+        backToIntroButton.style.display = 'inline-block';
+        startButton.style.display = 'none';
+      } else {
+        message.textContent = '❌ Ankieta dostępna tylko na terenie magazynu AutoDoc M13. / Опрос доступен только на территории склада AutoDoc М13.';
+        retryButton.style.display = 'inline-block';
+        backToIntroButton.style.display = 'inline-block';
+        startButton.style.display = 'none';
+      }
+    }
+
+    function error(err) {
+      console.warn(`Błąd geolokalizacji: ${err.message}`);
+      message.textContent = '⚠️ Nie udało się uzyskać współrzędnych. Zezwól na dostęp do lokalizacji i spróbuj ponownie. / Не удалось получить координаты. Разрешите доступ к геолокации и попробуйте снова.';
+      retryButton.style.display = 'inline-block';
+        backToIntroButton.style.display = 'inline-block';
+      startButton.style.display = 'none';
+    }
+
+    function resetToInitialState() {
+      message.textContent = 'Kliknij poniższy przycisk, aby rozpocząć. / Нажмите кнопку ниже для начала.';
+      startButton.style.display = 'inline-block';
+      retryButton.style.display = 'none';
+    }
+
+    function getDistanceFromLatLonInMeters(lat1, lon1, lat2, lon2) {
+      const R = 6371000;
+      const dLat = deg2rad(lat2 - lat1);
+      const dLon = deg2rad(lon2 - lon1);
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    function deg2rad(deg) {
+      return deg * (Math.PI / 180);
+    }
+  
+    const backToIntroButton = document.getElementById('backToIntroButton');
+
+    backToIntroButton.addEventListener('click', () => {
+      geoStage.classList.remove('active');
+      intro.classList.add('active');
+      startButton.style.display = 'inline-block';
+      retryButton.style.display = 'none';
+      backToIntroButton.style.display = 'none';
+      message.textContent = 'Kliknij poniższy przycisk, aby rozpocząć. / Нажмите кнопку ниже для начала.';
+    });
+</script>
+</body>
+</html>
