@@ -1,0 +1,12 @@
+{
+  "name": "autodoc-form",
+  "version": "1.0.0",
+  "description": "AutoDoc anonymous form with geolocation",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
