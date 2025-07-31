@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <title>Statystyka ankiety / Статистика опроса / Survey statistics</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+  <style>
+    body { background: #f5f7fa; font-family: sans-serif; margin: 0; padding: 0;}
+    .container { max-width: 900px; margin: 35px auto; background: #fff; border-radius: 18px; box-shadow: 0 8px 28px rgba(34, 100, 34, 0.11); padding: 24px 18px 14px; }
+    h1 { text-align: center; margin-bottom: 8px;}
+    .lang-switch { text-align: right; margin-bottom: 18px;}
+    .lang-switch button {
+      margin-left: 8px;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-weight: 600;
+      opacity: 0.8;
+      transition: opacity 0.3s, box-shadow 0.3s;
+      user-select: none;
+      color: white;
+    }
+    .lang-pl { background-color: #388e3c; } /* зеленый */
+    .lang-ru { background-color: #1976d2; } /* синий */
+    .lang-en { background-color: #d32f2f; } /* красный */
+    .lang-uk { background-color: #fbc02d; color: #333; } /* желтый */
+    .lang-ka { background-color: #5d4037; } /* коричневый */
+    .lang-switch button.active {
+      opacity: 1;
+      box-shadow: 0 0 8px rgba(0,0,0,0.3);
+    }
+    .qstat { margin: 38px 0 44px;}
+    .qtitle { font-weight: bold; font-size: 1.08em; margin-bottom: 7px;}
+    .answers-list { margin: 8px 0 6px 8px; }
+    .answers-list div { margin-bottom: 4px; }
+    .answers-list span { display: inline-block; min-width: 130px; }
+    .vote-count { font-weight: 600; margin-left: 12px; color: #444; }
+    canvas { margin: 10px auto 0; display: block;}
+    .legend {
+      margin-top: 8px;
+      font-size: 0.9em;
+    }
+    .legend span {
+      display: inline-flex;
+      align-items: center;
+      margin-right: 14px;
+    }
+    .legend span .color-box {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+    }
+    @media (max-width: 900px) { .container { padding: 8px 2vw;} }
+    @media (max-width: 540px) { .answers-list span { min-width: 90px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="lang-switch">
+      <button class="lang-pl" onclick="setLang('pl')">🇵🇱 Polski</button>
+      <button class="lang-ru" onclick="setLang('ru')">🇷🇺 Русский</button>
+      <button class="lang-en" onclick="setLang('en')">🇬🇧 English</button>
+      <button class="lang-uk" onclick="setLang('uk')">🇺🇦 Українська</button>
+      <button class="lang-ka" onclick="setLang('ka')">🇬🇪 ქართული</button>
+    </div>
+    <h1 id="statTitle">Statystyka ankiety</h1>
+    <div id="resultsBlock">
+      <div style="text-align:center; color:#888; font-size:1.04em; margin: 55px 0 0;">
+        Ładowanie wyników... / Загрузка... / Loading... / Завантаження... / ტვირთის ჩატვირთვა...
+      </div>
+    </div>
+    <div style="margin:36px 0 4px; text-align:center; color:#aaa; font-size:0.96em;" id="footerText">
+      NSZZ „Solidarność” w Autodoc
+    </div>
+  </div>
+
+  <script>
+const COLORS = ['#3b73d1', '#dd3d2d', '#f0a226', '#2e7d32']; // Синий, красный, оранжевый, зелёный
+
+const QUESTIONS = [
+  {
+    pl: "1. Jak oceniasz styl zarządzania obecnego kierownika magazynu?",
+    ru: "1. Как вы оцениваете стиль управления текущего руководителя склада?",
+    en: "1. How do you rate the management style of the current warehouse manager?",
+    uk: "1. Як ви оцінюєте стиль управління нинішнього керівника складу?",
+    ka: "1. როგორ აფასებთ ამჟამინდელი საწყობის მმართველის მართვის სტილს?",
+    options: [
+      {pl: "Szanujący i profesjonalny", ru: "Уважительный и профессиональный", en: "Respectful and professional", uk: "Повага та професіоналізм", ka: "მცემლობა და პროფესიონალიზმი"},
+      {pl: "Chłodny i formalny", ru: "Холодный и формальный", en: "Cold and formal", uk: "Холодний і формальний", ka: "ცივი და ფორმალური"},
+      {pl: "Autorytarny, powodujący napięcie", ru: "Авторитарный, вызывающий напряжение", en: "Authoritarian causing tension", uk: "Авторитарний, що викликає напруження", ka: "ავტორიტარული და სტრესის გამომწვევი"},
+      {pl: "Poniżający i wzbudzający strach", ru: "Унижающий и создающий страх", en: "Humiliating and fear-inducing", uk: "Принижуючий і викликає страх", ka: "მახინჯი და შიშის მომგვრელი"}
+    ]
+  },
+  {
+    pl: "2. Jak się czujesz w kontakcie z kierownikiem magazynu?",
+    ru: "2. Как вы себя чувствуете при общении с руководителем склада?",
+    en: "2. How do you feel communicating with the warehouse manager?",
+    uk: "2. Як ви почуваєтесь під час спілкування з керівником складу?",
+    ka: "2. როგორ გრძნობთ თავს საწყობის მმართველთან ურთიერთობისას?",
+    options: [
+      {pl: "Pewnie", ru: "Уверенно", en: "Confident", uk: "Впевнено", ka: "დაჯერებით"},
+      {pl: "Z napięciem", ru: "Напряжённо", en: "Tense", uk: "Напружено", ka: "სტრესული"},
+      {pl: "Unikam kontaktu", ru: "Избегаю общения", en: "Avoid contact", uk: "Уникаю контакту", ka: "კონტაქტის აცილება"},
+      {pl: "Odczuwam strach i bezsilność", ru: "Чувствую страх и незащищённость", en: "Feel fear and helplessness", uk: "Відчуваю страх та безпорадність", ka: "შიში და უსუსურობა"}
+    ]
+  },
+  {
+    pl: "3. Jak często masz realny dostęp do rozmowy z kierownikiem magazynu w sprawach służbowych?",
+    ru: "3. Насколько часто вы имеете реальный доступ к общению с руководителем склада по рабочим вопросам?",
+    en: "3. How often do you have real access to discuss work matters with the warehouse manager?",
+    uk: "3. Як часто ви маєте реальний доступ до спілкування з керівником складу з робочих питань?",
+    ka: "3. რამდენად ხშირად გაქვთ რეალური წვდომა საწყობის მენეჯერთან სამუშაო საკითხებზე საუბარზე?",
+    options: [
+      {pl: "Kierownik zawsze jest dostępny", ru: "Руководитель всегда доступен", en: "Manager is always available", uk: "Керівник завжди доступний", ka: "მენეჯერი ყოველთვის ხელმისაწვდომია"},
+      {pl: "Czasami udaje się porozmawiać", ru: "Иногда удаётся поговорить", en: "Sometimes able to talk", uk: "Іноді вдається поговорити", ka: "სხვამოქმედოდ შეგიძლია საუბარი"},
+      {pl: "Prawie zawsze odmawia kontaktu", ru: "Почти всегда отказывается от общения", en: "Almost always refuses contact", uk: "Майже завжди відмовляється від спілкування", ka: "მოსალოდნელია თითქმის ყოველთვის ურთიერთობის შეწყვეტა"},
+      {pl: "Całkowicie unika kontaktu z pracownikami", ru: "Совсем недоступен, избегает сотрудников", en: "Completely avoids contact with employees", uk: "Повністю уникає контакту з працівниками", ka: "სრულიად ერიდება თანამშრომლებთან ურთიერთობას"}
+    ]
+  },
+  {
+    pl: "4. Jak zmieniły się Twoje warunki pracy i samopoczucie po objęciu funkcji przez obecnego kierownika?",
+    ru: "4. Как изменились моральное состояние и условия труда после прихода текущего руководителя?",
+    en: "4. How have your working conditions and well-being changed since the current manager took over?",
+    uk: "4. Як змінилися умови праці та самопочуття після приходу нинішнього керівника?",
+    ka: "4. როგორ შეიცვალა სამუშაო პირობები და კეთილდღეობა ახალი მენეჯერის მოსვლის შემდეგ?",
+    options: [
+      {pl: "Poprawiły się", ru: "Улучшились", en: "Improved", uk: "Покращились", ka: "აუმჯობესდა"},
+      {pl: "Bez zmian", ru: "Не изменились", en: "No change", uk: "Без змін", ka: "ცვლილება არ არის"},
+      {pl: "Pogorszyły się", ru: "Ухудшились", en: "Worsened", uk: "Погіршилися", ka: "გაუარესდა"},
+      {pl: "Stały się nie do zniesienia", ru: "Стали невыносимыми", en: "Became unbearable", uk: "Стали невыносимими", ka: "არასანქცირებელია"}
+    ]
+  },
+  {
+    pl: "5. Jak zachowanie kierownictwa wpłynęło na produktywność pracy w zespole?",
+    ru: "5. Как, по вашему мнению, поведение руководства повлияло на продуктивность труда в коллективе?",
+    en: "5. How do you think management's behavior affected team productivity?",
+    uk: "5. Як ви вважаєте, поведінка керівництва вплинула на продуктивність команди?",
+    ka: "5. თქვენი აზრით, როგორ იმოქმედა მენეჯმენტის ქცევამ გუნდის პროდუქტიულობაზე?",
+    options: [
+      {pl: "Wydajność wzrosła", ru: "Производительность выросла", en: "Productivity increased", uk: "Продуктивність зросла", ka: "პროდუქტიულობა გაიზარდა"},
+      {pl: "Bez zmian", ru: "Не изменилась", en: "No change", uk: "Без змін", ka: "ცვლილება არ არის"},
+      {pl: "Nieco spadła", ru: "Снизилась немного", en: "Slightly decreased", uk: "Трохи знизилась", ka: "მნიშვნელოვნად შემცირდა"},
+      {pl: "Znacznie się pogorszyła", ru: "Сильно упала из-за атмосферы", en: "Significantly worsened", uk: "Значно погіршилась", ka: "ძალიან გაუარესდა"}
+    ]
+  },
+  {
+    pl: "6. Jak oceniasz zmiany w podejściu do kar dyscyplinarnych po objęciu funkcji przez obecnego kierownika?",
+    ru: "6. Как вы оцениваете изменения в отношении к дисциплинарным взысканиям после прихода нового руководителя склада?",
+    en: "6. How do you rate changes in disciplinary measures since the new manager arrived?",
+    uk: "6. Як ви оцінюєте зміни у дисциплінарних стягненнях після приходу нового керівника?",
+    ka: "6. როგორ აფასებთ დისციპლინარული ზომების ცვლილებებს ახალი მენეჯერის მოსვლის შემდეგ?",
+    options: [
+      {pl: "Nie zauważyłem/am różnicy", ru: "Не заметил(а) разницы", en: "No difference noticed", uk: "Не помітив(ла) різниці", ka: "არაფერი შეიცვალა"},
+      {pl: "Są one nakładane częściej niż wcześniej", ru: "Их стало применять чаще", en: "Applied more often", uk: "Застосовуються частіше", ka: "უფრო ხშირად გამოიყენება"},
+      {pl: "Wzrosła surowość i liczba kar", ru: "Ужесточились и участились взыскания", en: "Severity and number increased", uk: "Підвищилась суворість і кількість", ka: "გაუმკაცრდა და გაიზარდა რაოდენობა"},
+      {pl: "Kary stały się narzędziem nacisku", ru: "Взыскания используются как инструмент давления", en: "Penalties used as pressure tool", uk: "Використовуються як засіб тиску", ka: "დისციპლინური ზომები ჩართულა როგორც ზეწოლის ინსტრუმენტი"}
+    ]
+  },
+  {
+    pl: "7. Czy Twoim zdaniem zdarzały się niesprawiedliwe lub bezpodstawne kary wobec pracowników?",
+    ru: "7. По вашему мнению, случались ли случаи несправедливых или безосновательных взысканий в отношении работников?",
+    en: "7. In your opinion, have there been unfair or baseless penalties against employees?",
+    uk: "7. На вашу думку, чи були випадки несправедливих або безпідставних стягнень щодо працівників?",
+    ka: "7. თქვენი აზრით, იყო უსამართლო ან უსაფუძვლო დასჯები თანამშრომლებზე?",
+    options: [
+      {pl: "Tak, wielokrotnie", ru: "Да, неоднократно", en: "Yes, repeatedly", uk: "Так, неодноразово", ka: "დიახ, რამდენჯერმე"},
+      {pl: "Tak, sporadycznie", ru: "Да, эпизодически", en: "Yes, occasionally", uk: "Так, час від часу", ka: "დიახ, ხანდახან"},
+      {pl: "Nie, nie zauważyłem/am takich przypadków", ru: "Нет, не замечал(а)", en: "No, haven't noticed", uk: "Ні, не помічав(ла)", ka: "არა, არ მიმჩნევია"},
+      {pl: "Trudno powiedzieć", ru: "Трудно сказать", en: "Hard to say", uk: "Важко сказати", ka: "მიჭირს თქმა"}
+    ]
+  }
+];
+
+const LANG_NAMES = {
+  pl: "Statystyka ankiety",
+  ru: "Статистика опроса",
+  en: "Survey statistics",
+  uk: "Статистика опитування",
+  ka: "სტატისტიკა"
+};
+
+let curLang = localStorage.getItem("ankieta_lang") || "pl";
+let results = [];
+
+function setLang(lang) {
+  curLang = lang;
+  localStorage.setItem("ankieta_lang", lang);
+
+  document.getElementById("statTitle").textContent = LANG_NAMES[lang] || LANG_NAMES.pl;
+
+  document.querySelectorAll(".lang-switch button").forEach(b => {
+    b.classList.toggle("active", b.classList.contains("lang-" + lang));
+  });
+
+  renderAll();
+}
+
+async function loadResults() {
+  try {
+    const resp = await fetch("/results");
+    if (resp.ok) {
+      results = await resp.json();
+      renderAll();
+    } else {
+      showErr({pl: "Błąd pobierania danych", ru: "Ошибка загрузки данных", en: "Data loading error", uk:"Помилка завантаження даних", ka:"მონაცემების ჩამოტვირთვის შეცდომა"}[curLang] || "Data loading error");
+    }
+  } catch {
+    showErr({pl: "Brak połączenia z serwerem", ru: "Нет связи с сервером", en:"No connection to server", uk:"Немає зв'язку з сервером", ka:"სერვერთან კავშირის არქონა"}[curLang] || "No connection to server");
+  }
+}
+
+function showErr(msg) {
+  document.getElementById("resultsBlock").innerHTML = `<div style="color:#d00; text-align:center; margin:60px 0 20px;">${msg}</div>`;
+}
+
+function renderAll() {
+  if (!results.length) {
+    document.getElementById("resultsBlock").innerHTML = `<div style="text-align:center; color:#888; font-size:1.04em; margin: 55px 0 0;">
+      ${
+        {
+          pl: "Brak odpowiedzi",
+          ru: "Нет ответов",
+          en: "No responses",
+          uk: "Відсутні відповіді",
+          ka: "პასუხები არ არის"
+        }[curLang] || "No responses"
+      }
+    </div>`;
+    return;
+  }
+  let html = '';
+  QUESTIONS.forEach((q, qi) => {
+    let counts = [0, 0, 0, 0],
+      total = 0;
+    results.forEach(ans => {
+      let idx = Number(ans['q' + (qi + 1)]) - 1;
+      if (idx >= 0 && idx < 4) {
+        counts[idx]++;
+        total++;
+      }
+    });
+    html += `<div class="qstat"><div class="qtitle">${q[curLang]} <span class="vote-count">(${total} ${
+      {pl:"odpowiedzi", ru:"ответов", en:"responses", uk:"відповідей", ka:"პასუხი"}[curLang] || "responses"
+    })</span></div><div class="answers-list">`;
+    q.options.forEach((op, i) => {
+      let c = counts[i],
+        p = total ? Math.round(1000 * c / total) / 10 : 0;
+      html += `<div>
+        <span>${op[curLang]}</span>
+        <span style="font-weight:600; margin-left:8px;">${c}</span>
+        <span style="color:#888; margin-left:5px;">(${p}%)</span>
+      </div>`;
+    });
+    html += `</div><canvas id="chart_q${qi + 1}" width="390" height="170"></canvas>`;
+
+    // Легенда цветов под диаграммой
+    html += `<div class="legend">`;
+    q.options.forEach((op, i) => {
+      html += `<span>
+        <span class="color-box" style="background:${COLORS[i]}"></span>
+        ${op[curLang]}
+      </span>`;
+    });
+    html += `</div>`;
+
+    html += `</div>`;
+  });
+  document.getElementById("resultsBlock").innerHTML = html;
+  setTimeout(drawCharts, 50);
+}
+
+function drawCharts() {
+  QUESTIONS.forEach((q, qi) => {
+    let counts = [0, 0, 0, 0], total = 0;
+    results.forEach(ans => {
+      let idx = Number(ans['q' + (qi + 1)]) - 1;
+      if (idx >= 0 && idx < 4) {
+        counts[idx]++;
+        total++;
+      }
+    });
+    const ctx = document.getElementById(`chart_q${qi + 1}`).getContext('2d');
+    if (window['chart_' + qi]) {
+      window['chart_' + qi].destroy();
+    }
+    window['chart_' + qi] = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: q.options.map(o => o[curLang]),
+        datasets: [{
+          data: counts,
+          backgroundColor: COLORS,
+          borderColor: '#fff',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          datalabels: {
+            color: '#fff',
+            formatter: function(value, context) {
+              const total = context.chart.data.datasets[0].data.reduce((a,b)=>a+b,0);
+              if (total === 0) return '';
+              return (value / total * 100).toFixed(1) + '%';
+            },
+            font: { weight: 'bold', size: 14 }
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const total = context.chart.data.datasets[0].data.reduce((a,b)=>a+b,0);
+                return context.label + ': ' + context.parsed + ' (' + (context.parsed / total * 100).toFixed(1) + '%)';
+              }
+            }
+          }
+        }
+      },
+      plugins: [ChartDataLabels]
+    });
+  });
+}
+
+// Загрузка данных и установка языка при старте
+loadResults();
+setLang(curLang);
+  </script>
+</body>
+</html>
