@@ -229,41 +229,85 @@ function showTab(tabId) {
 <button class="btn" id="retryButton" style="display:none;">🔄 Odśwież / Обновить</button>
 <button class="btn" id="backToIntroButton" style="display:none; background-color: #2e7d32; color: white; margin-left: 10px;">🔙 Wróć / Вернуться в начало</button></div>
 <script>
-    const warehouseLat = 53.42704842215917;
+   const warehouseLat = 53.42704842215917;
 const warehouseLon = 14.73561802819243;
-    const allowedRadius = 160;
+const allowedRadius = 160;
 
-    const intro = document.getElementById('intro');
-    const geoStage = document.getElementById('geoStage');
-    const startButton = document.getElementById('startButton');
-    const retryButton = document.getElementById('retryButton');
-    const message = document.getElementById('message');
+const intro = document.getElementById('intro');
+const geoStage = document.getElementById('geoStage');
+const startButton = document.getElementById('startButton');
+const retryButton = document.getElementById('retryButton');
+const message = document.getElementById('message');
 
-    function goToGeoStage() {
-      intro.classList.remove('active');
-      geoStage.classList.add('active');
+function goToGeoStage() {
+  intro.classList.remove('active');
+  geoStage.classList.add('active');
+}
+
+startButton.addEventListener('click', () => {
+  runGeolocationCheck();
+});
+
+retryButton.addEventListener('click', () => {
+  backToIntroButton.style.display = 'none';
+  resetToInitialState();
+});
+
+// --- Новый runGeolocationCheck ---
+let watchId = null;
+let geoTimeout = null;
+let bestPos = null;
+let bestAccuracy = 9999;
+
+function runGeolocationCheck() {
+  message.textContent = '⏳ Sprawdzanie współrzędnych... / Проверка координат...';
+  startButton.style.display = 'none';
+  retryButton.style.display = 'none';
+
+  bestPos = null;
+  bestAccuracy = 9999;
+
+  watchId = navigator.geolocation.watchPosition(
+    function(position) {
+      const acc = position.coords.accuracy || 9999;
+      if (acc < bestAccuracy) {
+        bestAccuracy = acc;
+        bestPos = position;
+      }
+      if (acc < 15) { // если точность стала очень хорошей — стопим!
+        stopGeoWatch();
+        success(bestPos);
+      }
+    },
+    error,
+    {
+      enableHighAccuracy: true,
+      timeout: 20000,
+      maximumAge: 0
     }
+  );
 
-    startButton.addEventListener('click', () => {
-      runGeolocationCheck();
-    });
-
-    retryButton.addEventListener('click', () => {
-        backToIntroButton.style.display = 'none';
-      resetToInitialState();
-    });
-
-    function runGeolocationCheck() {
-      message.textContent = '⏳ Sprawdzanie współrzędnych... / Проверка координат...';
-      startButton.style.display = 'none';
-      retryButton.style.display = 'none';
-
-      navigator.geolocation.getCurrentPosition(success, error, {
-        enableHighAccuracy: true,
-        timeout: 20000,
-        maximumAge: 0
-      });
+  geoTimeout = setTimeout(function() {
+    stopGeoWatch();
+    if (bestPos) {
+      success(bestPos);
+    } else {
+      error({message: "Brak dokładnych współrzędnych / Нет точных координат"});
     }
+  }, 15000);
+}
+
+function stopGeoWatch() {
+  if (watchId !== null) {
+    navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+  }
+  if (geoTimeout !== null) {
+    clearTimeout(geoTimeout);
+    geoTimeout = null;
+  }
+}
+
 
     
 
