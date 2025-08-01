@@ -274,7 +274,7 @@ function runGeolocationCheck() {
         bestAccuracy = acc;
         bestPos = position;
       }
-      if (acc < 15) { // если точность стала очень хорошей — стопим!
+      if (acc < 50) { // если точность стала очень хорошей — стопим!
         stopGeoWatch();
         success(bestPos);
       }
